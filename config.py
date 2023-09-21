@@ -6,11 +6,14 @@ load_dotenv()
 class Config:
     # Flask
     DEBUG = False
-    SECRET_KEY = os.environ.get('SECRET_KEY') or 'your-secret-key'
+    SECRET_KEY = os.environ.get('SECRET_KEY') or 'SayabiDevsTeam9'
 
     # Database
-    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or 'sqlite:///your-database.db'
+    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL')
     SQLALCHEMY_TRACK_MODIFICATIONS = False
+    SQLALCHEMY_DATABASE_DRIVER = os.environ.get('DATABASE_DRIVER')
+    SQLALCHEMY_ECHO = True
+    SQLALCHEMY_PORT = os.environ.get("PORT")
 
     # Email
     MAIL_SERVER = 'smtp.example.com'
