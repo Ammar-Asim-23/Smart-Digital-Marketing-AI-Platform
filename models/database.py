@@ -6,6 +6,10 @@ from datetime import date, datetime
 
 Base = declarative_base()
 
+
+
+
+
 class User(Base):
     __tablename__ = 'users'
     
@@ -18,7 +22,9 @@ class User(Base):
     contact_number = Column('contact_number', String(20))
     
     # Define a one-to-many relationship from User to Campaign
-    campaigns = relationship('Campaign', back_populates='user')
+    campaign_user = relationship('Campaign', back_populates='user_campaign')
+    impression_user = relationship('Impression', back_populates='user_impression')
+    tag_user = relationship('Tag', back_populates='user_tag')
     
     def __init__(self, first_name, last_name, email, password, date_of_birth, contact_number):
         self.first_name:str = first_name
@@ -30,6 +36,10 @@ class User(Base):
     
     def __repr__(self):
         return f"<User {self.first_name} {self.last_name} {self.email} {self.password} {self.date_of_birth} {self.contact_number}>"
+
+
+
+
 
 class Campaign(Base):
     __tablename__ = 'campaigns'
@@ -43,8 +53,8 @@ class Campaign(Base):
     budget = Column(Float, nullable=False)
 
     # Define a relationship with the User entity (assuming you have a User class)
-    user = relationship('User', back_populates='campaigns')
-    ad_groups = relationship('ADGroup', back_populates='campaign')
+    user_campaign = relationship('User', back_populates='campaign_user')
+    ad_group_campaign = relationship('ADGroup', back_populates='campaign_ad_group')
 
     def __init__(self, campaign_name, user_id, status, start_date, end_date, budget):
         self.campaign_name:str = campaign_name
@@ -58,6 +68,10 @@ class Campaign(Base):
         return f"<Campaign {self.campaign_name} {self.status} {self.start_date} {self.end_date} {self.budget}>"
 
 
+
+
+
+
 class AD(Base):
     __tablename__ = 'ads'
 
@@ -67,6 +81,9 @@ class AD(Base):
     ad_description = Column(String(255), nullable=False)
     status = Column(String(20), nullable=False)
     clickthroughrate = Column(Float, nullable=False)
+    
+    ad_group_ad = relationship('ADGroup', back_populates='ad_ad_group')
+    impression_ad = relationship('Impression', back_populates='ad_impression')
 
     def __init__(self, ad_group_id, ad_title, ad_description, status, clickthroughrate):
         self.ad_group_id = ad_group_id
@@ -78,6 +95,12 @@ class AD(Base):
     def __repr__(self):
         return f"<AD {self.ad_title} {self.status} {self.clickthroughrate}>"
 
+
+
+
+
+
+
 class ADGroup(Base):
     __tablename__ = 'ad_groups'
 
@@ -88,7 +111,8 @@ class ADGroup(Base):
     budget = Column(Float, nullable=False)
 
     # Define a relationship with the Campaign entity
-    campaign = relationship('Campaign', back_populates='ad_groups')
+    campaign_ad_group = relationship('Campaign', back_populates='ad_group_campaign')
+    ad_ad_group = relationship('AD', back_populates='ad_group_ad')
 
     def __init__(self, campaign_id, ad_group_name, status, budget):
         self.campaign_id = campaign_id
@@ -99,6 +123,13 @@ class ADGroup(Base):
     def __repr__(self):
         return f"<ADGroup {self.ad_group_name} {self.status} {self.budget}>"
 
+
+
+
+
+
+
+
 class Impression(Base):
     __tablename__ = 'impressions'
 
@@ -107,6 +138,10 @@ class Impression(Base):
     user_id = Column(Integer, ForeignKey('users.user_id'), nullable=False)
     timestamp = Column(DateTime, default=datetime.utcnow, nullable=False)
     location = Column(String(100), nullable=False)
+    
+    user_impression = relationship('User', back_populates='impression_user')
+    ad_impression = relationship('AD', back_populates='impression_ad')
+    click_impression = relationship('Click', back_populates='impression_click')
 
     def __init__(self, ad_id, user_id, location):
         self.ad_id = ad_id
@@ -116,6 +151,10 @@ class Impression(Base):
     def __repr__(self):
         return f"<Impression {self.timestamp} {self.location}>"
 
+
+
+
+
 class Click(Base):
     __tablename__ = 'clicks'
 
@@ -124,12 +163,21 @@ class Click(Base):
     time = Column(DateTime, default=datetime.utcnow, nullable=False)
     cost = Column(Float, nullable=False)
 
+    impression_click = relationship('Impression', back_populates='click_impression')
+    conversion_click = relationship('Conversion', back_populates='click_conversion')
+
     def __init__(self, impression_id, cost):
         self.impression_id = impression_id
         self.cost = cost
 
     def __repr__(self):
         return f"<Click {self.time} {self.cost}>"
+
+
+
+
+
+
 
 class Conversion(Base):
     __tablename__ = 'conversions'
@@ -139,6 +187,8 @@ class Conversion(Base):
     timestamp = Column(DateTime, default=datetime.utcnow, nullable=False)
     revenue = Column(Float, nullable=False)
     conversion_value = Column(Float, nullable=False)
+    
+    click_conversion = relationship('Click', back_populates='conversion_click')
 
     def __init__(self, click_id, revenue, conversion_value):
         self.click_id = click_id
@@ -148,7 +198,27 @@ class Conversion(Base):
     def __repr__(self):
         return f"<Conversion {self.timestamp} {self.revenue} {self.conversion_value}>"
     
-    
+
+
+
+
+
+class Tag(Base):
+    __tablename__ = 'tags'
+
+    tag_id = Column(Integer, primary_key=True, autoincrement=True)
+    tag_name = Column(String(100), nullable=False)
+
+    # Define a many-to-one relationship from Tag to User
+    user_id = Column(Integer, ForeignKey('users.user_id'), nullable=False)
+    user_tag = relationship('User', back_populates='tag_user')
+
+    def __init__(self, tag_name, user_id):
+        self.tag_name = tag_name
+        self.user_id = user_id
+
+    def __repr__(self):
+        return f"<Tag {self.tag_name}>"    
 
 
 
@@ -157,7 +227,5 @@ engine = create_engine('sqlite:///database.db', echo=True)
 Base.metadata.create_all(bind=engine)
 Session = sessionmaker(bind=engine)
 session = Session()
-campaign = Campaign('Independence Day Sale', 1, 'Ongoing',date(2023,8,14),date(2023,8,17),200000)
-session.add(campaign)
 session.commit()
     
