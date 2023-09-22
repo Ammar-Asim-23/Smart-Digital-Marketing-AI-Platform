@@ -10,7 +10,7 @@ Base = declarative_base()
 
 
 
-class User(Base):
+class User(db.Model):
     __tablename__ = 'users'
     
     user_id = Column("user_id", Integer, primary_key=True,autoincrement=True)
@@ -20,19 +20,6 @@ class User(Base):
     password = Column("password", CHAR(80), nullable=False)
     date_of_birth = Column('date_of_birth', Date, nullable=False)
     contact_number = Column('contact_number', String(20))
-    
-    # Define a one-to-many relationship from User to Campaign
-    campaign_user = relationship('Campaign', back_populates='user_campaign')
-    impression_user = relationship('Impression', back_populates='user_impression')
-    tag_user = relationship('Tag', back_populates='user_tag')
-    
-    def __init__(self, first_name, last_name, email, password, date_of_birth, contact_number):
-        self.first_name:str = first_name
-        self.last_name:str = last_name
-        self.email:str = email
-        self.password:str = password
-        self.date_of_birth:date = date_of_birth
-        self.contact_number:str = contact_number
     
     def __repr__(self):
         return f"<User {self.first_name} {self.last_name} {self.email} {self.password} {self.date_of_birth} {self.contact_number}>"

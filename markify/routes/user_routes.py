@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template
 from models.database import Session, User
-from app import db
+from markify import db
 
 
 users_bp = Blueprint('users', __name__)
